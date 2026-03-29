@@ -1,0 +1,7 @@
+#!/bin/sh
+exec 2>&1
+
+# Wait for bluetoothd to be fully running before exposing a BLE terminal.
+sv check bluetoothd >/dev/null || exit 1
+
+exec /usr/local/venv/bin/python -u /usr/comma/ble_uart.py

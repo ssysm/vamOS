@@ -66,6 +66,10 @@ RUN cd /tmp/vamos/uv && \
     MAKEFLAGS="-j$(nproc)" UV_CONCURRENT_BUILDS=4 UV_NO_CACHE=1 UV_PROJECT_ENVIRONMENT=$XDG_DATA_HOME/venv \
     uv sync --frozen --inexact
 
+# bless (BLE GATT server, built on bleak/asyncio) — installed outside uv lockfile
+# because the lockfile is generated on aarch64 and bless isn't in it yet.
+RUN $XDG_DATA_HOME/venv/bin/pip install --no-cache-dir bless
+
 # Install firmware from upstream linux-firmware (ath10k WiFi + modem + Bluetooth)
 COPY ./kernel/firmware/ath10k/WCN3990/hw1.0 /lib/firmware/ath10k/WCN3990/hw1.0
 COPY ./kernel/firmware/qcom/sdm845 /lib/firmware/qcom/sdm845
@@ -89,7 +93,7 @@ RUN for svc in \
   sound varwatch busybox-ntpd \
   irsc_util leprop adsp cdsp \
   qrtr-ns rmtfs tqftpserv pd-mapper \
-  comma modemmanager bluetoothd magic \
+  comma modemmanager bluetoothd magic ble-uart \
   ssh-param-watcher ncm-param-watcher dnsmasq \
   rsyslogd iptables polkitd \
   agetty-ttyMSM0 agetty-ttyAMA0; do \
@@ -104,6 +108,7 @@ RUN sed -i 's/FileCreateMode 0640/FileCreateMode 0644/' /etc/rsyslog.conf
 
 # Set executable permissions
 RUN chmod +x /usr/comma/comma.sh /usr/comma/get-serial.sh /usr/comma/get-bt-address.sh /usr/comma/set-bt-address.sh /usr/comma/set_ssh.sh /usr/comma/set_ncm.sh /usr/comma/fs_setup.sh /usr/bin/journalctl /etc/sv/bluetoothd/run
+RUN chmod +x /usr/comma/ble_uart.py /etc/sv/ble-uart/run
 RUN chmod +x /etc/runit/1 /etc/runit/2 /etc/runit/3
 
 # Shutdown wrappers - send wall broadcast like systemd does on Ubuntu
